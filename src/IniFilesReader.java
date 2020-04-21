@@ -1,4 +1,4 @@
-import java.io.DataInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -6,17 +6,16 @@ import java.util.LinkedList;
 
 public class IniFilesReader extends InputStream {
 
-    DataInputStream inputStream;
+    private final FileReader fileReader;
 
-    public IniFilesReader(InputStream inputStream) {
-        this.inputStream = new DataInputStream(inputStream);
+    public IniFilesReader(FileReader fileReader) {
+        this.fileReader = fileReader;
     }
 
     public LinkedList<PairUnifiedGenericsContainer<String, LinkedList<PairUnifiedGenericsContainer<String, String>>>> readIniFile() {
         LinkedList<PairUnifiedGenericsContainer<String, LinkedList<PairUnifiedGenericsContainer<String, String>>>> section = new LinkedList<>();
         try {
-            inputStream.readChar();
-            while (inputStream.available() > 0) {
+            while (fileReader.read() != -1) {
                 section.add(readSection());
             }
         } catch (IOException e) {
@@ -29,8 +28,10 @@ public class IniFilesReader extends InputStream {
         LinkedList<PairUnifiedGenericsContainer<String, String>> pairs = new LinkedList<>();
         String nameSection = readString();
         try {
-            while (inputStream.available() > 0 && inputStream.readChar() != '[') {
+            int c = fileReader.read();
+            while (c != -1 && c != '[') {
                 pairs.add(readPair());
+                c = fileReader.read();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -47,21 +48,21 @@ public class IniFilesReader extends InputStream {
     private String readString() {
         ByteBuffer byteBuffer = ByteBuffer.allocate(100);
         try {
-            char c = inputStream.readChar();
+            int c = fileReader.read();
             while (c != '"' && c !=']') {
                 if (c == '\\') {
-                    c = inputStream.readChar();
+                    c = fileReader.read();
                 }
-                if (c == ' ' && inputStream.readChar() == '=') {
-                    inputStream.readChar();
-                    inputStream.readChar();
+                if (c == ' ' && fileReader.read() == '=') {
+                    fileReader.read();
+                    fileReader.read();
                     break;
                 }
-                byteBuffer.putChar(c);
-                c = inputStream.readChar();
+                byteBuffer.putChar((char)c);
+                c = fileReader.read();
             }
             if (c == '"') {
-                inputStream.readChar();
+                fileReader.read();
             }
             byteBuffer.rewind();
         } catch (IOException e) {

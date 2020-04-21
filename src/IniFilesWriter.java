@@ -1,22 +1,18 @@
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Collection;
+import java.io.*;
 import java.util.LinkedList;
 
 
 public class IniFilesWriter extends OutputStream {
+    private final FileWriter fileWriter;
 
-    DataOutputStream outputStream;
-
-    public IniFilesWriter(OutputStream outputStream) {
-        this.outputStream = new DataOutputStream(outputStream);
+    public IniFilesWriter(FileWriter fileWriter) {
+        this.fileWriter = fileWriter;
     }
 
     public void writeIniFile(LinkedList<PairUnifiedGenericsContainer<String, LinkedList<PairUnifiedGenericsContainer<String, String>>>> containers) {
-        for (PairUnifiedGenericsContainer<String, LinkedList<PairUnifiedGenericsContainer<String, String>>> section: containers) {
+        for (PairUnifiedGenericsContainer<String, LinkedList<PairUnifiedGenericsContainer<String, String>>> section : containers) {
             writeSection(section.getValue1());
-            for (PairUnifiedGenericsContainer<String, String> pair: section.getValue2()) {
+            for (PairUnifiedGenericsContainer<String, String> pair : section.getValue2()) {
                 writePair(pair);
             }
         }
@@ -24,12 +20,16 @@ public class IniFilesWriter extends OutputStream {
 
     private void writeSection(String section) {
         try {
-            outputStream.writeChar('[');
+            fileWriter.write('[');
             for (int i = 0; i < section.length(); i++) {
-                outputStream.writeChar(section.charAt(i));
+                if (section.charAt(i) == '=' || section.charAt(i) == '\\' || section.charAt(i) == '"') {
+                    fileWriter.write('\\');
+                }
+                fileWriter.write(section.charAt(i));
             }
-            outputStream.writeChar(']');
-            outputStream.writeChar('\n');
+            fileWriter.write(section);
+            fileWriter.write("]\\n");
+            fileWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -38,13 +38,10 @@ public class IniFilesWriter extends OutputStream {
     public void writePair(PairUnifiedGenericsContainer<String, String> pair) {
         try {
             writeString(pair.getValue1());
-            outputStream.writeChar(' ');
-            outputStream.writeChar('=');
-            outputStream.writeChar(' ');
-            outputStream.writeChar('"');
+            fileWriter.write(" = \"");
             writeString(pair.getValue2());
-            outputStream.writeChar('"');
-            outputStream.writeChar('\n');
+            fileWriter.write("\"\n");
+            fileWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -54,10 +51,11 @@ public class IniFilesWriter extends OutputStream {
         try {
             for (int i = 0; i < value.length(); i++) {
                 if (value.charAt(i) == '"' || value.charAt(i) == '=' || value.charAt(i) == '\\') {
-                    outputStream.writeChar('\\');
+                    fileWriter.write('\\');
                 }
-                outputStream.writeChar(value.charAt(i));
+                fileWriter.write(value.charAt(i));
             }
+            fileWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
