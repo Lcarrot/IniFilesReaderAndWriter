@@ -24,7 +24,7 @@ public class IniFilesReader extends InputStream {
         return section;
     }
 
-    public PairUnifiedGenericsContainer<String, LinkedList<PairUnifiedGenericsContainer<String, String>>> readSection() {
+    private PairUnifiedGenericsContainer<String, LinkedList<PairUnifiedGenericsContainer<String, String>>> readSection() {
         LinkedList<PairUnifiedGenericsContainer<String, String>> pairs = new LinkedList<>();
         String nameSection = readString();
         try {
